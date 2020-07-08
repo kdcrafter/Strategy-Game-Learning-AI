@@ -1,11 +1,8 @@
-from game import TictactoeGame
-from agent import RandomAgent
+from games import Tictactoe
+from agents import Human, RandomAction
+from simulator import Simulator
 
 if __name__ == '__main__':
-    player1 = RandomAgent()
-    player2 = RandomAgent()
-    tictactoe = TictactoeGame(player1, player2)
-
-    tictactoe.play(num_games=100)
-
-    print(tictactoe.num_player1_wins, tictactoe.num_player2_wins, tictactoe.num_draws)
+    simulator = Simulator(Tictactoe(), Human(), RandomAction())
+    simulator.play()
+    print(simulator.num_player1_wins, simulator.num_player2_wins, simulator.num_draws)
