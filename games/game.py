@@ -1,15 +1,12 @@
 from abc import ABC, abstractmethod, abstractproperty
 
 class Game(ABC):
-    def __init__(self):
+    @abstractmethod
+    def __init__(self, current_player=1, board=None):
         super().__init__()
 
-    @abstractproperty
-    def current_player(self):
-        pass
-
     @abstractmethod
-    def setup(self):
+    def setup(self, current_player=1, board=None):
         pass
 
     @abstractmethod
@@ -17,7 +14,7 @@ class Game(ABC):
         pass
 
     @abstractmethod
-    def apply(self, action):
+    def get_copy(self):
         pass
 
     @abstractmethod
@@ -25,5 +22,17 @@ class Game(ABC):
         pass
 
     @abstractmethod
+    def apply(self, action):
+        pass
+
+    @abstractmethod
     def __str__(self):
+        pass
+
+    @abstractproperty
+    def current_player(self):
+        pass
+
+    @abstractproperty
+    def board(self):
         pass

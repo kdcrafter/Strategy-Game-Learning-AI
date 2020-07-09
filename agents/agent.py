@@ -5,5 +5,5 @@ class Agent(ABC):
         super().__init__()
 
     @abstractmethod
-    def act(self, state):
+    def act(self, game):
         pass

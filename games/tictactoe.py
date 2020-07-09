@@ -16,46 +16,53 @@ CHECKS = np.array([
 ], dtype=np.int8)
 
 class Tictactoe(Game):
-    def __init__(self):
-        super().__init__()
-    
-    @property
-    def current_player(self):
-        return self._current_player
+    def __init__(self, current_player=1, board=None):
+        super().__init__(current_player=current_player, board=board)
+        self.setup(current_player=current_player, board=board)
 
-    @current_player.setter
-    def current_player(self, value):
-        self._current_player = value
+    def setup(self, current_player=1, board=None):
+        self.current_player = current_player
 
-    def setup(self):
-        self.current_player = 1
-        self.board = np.zeros(9, dtype=np.int8)
+        if board is None:
+            self.board = np.zeros(9, dtype=np.int8)
+        else:
+            self.board = board
 
     def get_valid_actions(self):
         return ACTIONS[np.where(self.board==0)]
 
-    def apply(self, action):
-        # if action is invalid, give win to other player
-        if self.board[action] != 0:
-            return True, -self.current_player
-
-        self.board[action] = self.current_player
-
-        finished, winner = self.get_result()
-        self.current_player = -self.current_player
-    
-        return finished, winner
-
     def get_result(self):
-        # calculate array that shows which sqaures belong to current player
-        player_board = self.board==self.current_player
+        # calculate array that shows which sqaures belong to player who made the last move
+        previous_player = -self.current_player
+        player_board = self.board==previous_player
 
-        # check if current player has a 3-in-a-row
+        # check if previous player has a 3-in-a-row
         for sqaures in CHECKS:
             if np.all(player_board[sqaures]):
-                return True, self.current_player
+                return True, previous_player
 
         return np.all(self.board!=0), 0
+
+    def get_copy(self):
+        return Tictactoe(self.current_player, np.copy(self.board))
+
+    def get_symbol(self, value):
+        if value == 1:
+            return 'X'
+        elif value == -1:
+            return 'O'
+        else:
+            return ' '
+
+    def apply(self, action):
+        # if action is invalid, do nothing and let caller decide what to do
+        if self.board[action] != 0:
+            return False
+
+        self.board[action] = self.current_player
+        self.current_player = -self.current_player
+
+        return True
 
     def __str__(self):
         return f'''
@@ -66,10 +73,18 @@ class Tictactoe(Game):
         {self.get_symbol(self.board[6])}|{self.get_symbol(self.board[7])}|{self.get_symbol(self.board[8])}
         '''
 
-    def get_symbol(self, value):
-        if value == 1:
-            return 'X'
-        elif value == -1:
-            return 'O'
-        else:
-            return ' '
+    @property
+    def current_player(self):
+        return self._current_player
+
+    @current_player.setter
+    def current_player(self, value):
+        self._current_player = value
+
+    @property
+    def board(self):
+        return self._board
+
+    @board.setter
+    def board(self, value):
+        self._board = value
