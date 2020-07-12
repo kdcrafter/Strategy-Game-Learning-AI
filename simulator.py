@@ -1,13 +1,27 @@
+from time import time
+
 class Simulator():
     def __init__(self, game, player1, player2):
         self.game = game
         self.player1 = player1 # agent acting as player1 (1)
         self.player2 = player2 # agent acting as player2 (-1)
 
+        self.reset_results()
+
+    def set_game(self, game):
+        self.game = game
+
+    def set_player1(self, player1):
+        self.player1 = player1
+
+    def set_player2(self, player2):
+        self.player2 = player2
+
+    def reset_results(self):
         self.num_player1_wins = 0
         self.num_player2_wins = 0
         self.num_draws = 0
-    
+
     def play(self, num_games=1):
         for i in range(num_games):
             self.game.setup() # reset game to initial state
