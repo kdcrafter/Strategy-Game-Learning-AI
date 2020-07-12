@@ -37,6 +37,7 @@ class Minmax(Agent):
 
         finished, winner = game.get_result()
         if finished:
+            self.cache[game] = winner
             return winner
 
         valid_actions = game.get_valid_actions()

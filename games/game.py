@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod, abstractproperty
+import numpy as np
 
 class Game(ABC):
     @abstractmethod
@@ -28,6 +29,14 @@ class Game(ABC):
     @abstractmethod
     def __str__(self):
         pass
+
+    def __hash__(self):
+        state = bytearray(self.board.tobytes())
+        state.append(self.current_player+1) # append either 2 or 0 (can't be -1)
+        return hash(bytes(state))
+
+    def __eq__(self, other):
+        return np.array_equal(self.board, other.board) and self.current_player == other.current_player
 
     @abstractproperty
     def current_player(self):
