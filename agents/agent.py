@@ -7,3 +7,9 @@ class Agent(ABC):
     @abstractmethod
     def act(self, game):
         pass
+
+    def end_turn_callback(self, game, action):
+        pass
+
+    def gameover_callback(self, result):
+        pass

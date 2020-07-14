@@ -46,6 +46,11 @@ class Tictactoe(Game):
     def get_copy(self):
         return Tictactoe(self.current_player, np.copy(self.board))
 
+    def get_next_copy(self, action):
+        next_game = self.get_copy()
+        next_game.apply(action)
+        return next_game
+
     def get_symbol(self, value):
         if value == 1:
             return 'X'

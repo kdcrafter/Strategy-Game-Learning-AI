@@ -30,8 +30,10 @@ class Simulator():
             while not finished:
                 if self.game.current_player == 1:
                     action = self.player1.act(self.game.get_copy())
+                    self.player1.end_turn_callback(self.game.get_copy(), action)
                 else:
                     action = self.player2.act(self.game.get_copy())
+                    self.player2.end_turn_callback(self.game.get_copy(), action)
 
                 valid = self.game.apply(action)
                 
@@ -40,6 +42,9 @@ class Simulator():
                     break
                     
                 finished, winner = self.game.get_result()
+
+            self.player1.gameover_callback(winner)
+            self.player2.gameover_callback(winner)
 
             self.update_results(winner)
 

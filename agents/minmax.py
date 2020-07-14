@@ -11,7 +11,7 @@ class Minmax(Agent):
 
     def act(self, game):
         valid_actions = game.get_valid_actions()
-        game_values = np.array([self.get_game_value(self.get_next_game(game, action)) for action in valid_actions])
+        game_values = np.array([self.get_game_value(game.get_next_copy(action)) for action in valid_actions])
 
         # TODO: see if their should be a option to choose best options randomly
 
@@ -24,11 +24,6 @@ class Minmax(Agent):
         best_actions = valid_actions[best_indexes]
 
         return np.random.choice(best_actions, 1)[0]
-
-    def get_next_game(self, game, action):
-        next_game = game.get_copy()
-        next_game.apply(action)
-        return next_game
 
     def get_game_value(self, game):
         winner = self.cache[game]
@@ -45,7 +40,7 @@ class Minmax(Agent):
             return winner
 
         valid_actions = game.get_valid_actions()
-        game_values = np.array([self.get_game_value(self.get_next_game(game, action)) for action in valid_actions])
+        game_values = np.array([self.get_game_value(game.get_next_copy(action)) for action in valid_actions])
 
         if game.current_player == 1:
             return np.max(game_values)

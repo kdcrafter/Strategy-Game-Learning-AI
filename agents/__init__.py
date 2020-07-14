@@ -8,3 +8,5 @@ from random_action import RandomAction
 from human import Human
 from minmax import Minmax
 from closest_action import ClosestAction
+from tabular_qlearning import TabularQlearning
+from double_tabular_qlearning import DoubleTabularQlearning
