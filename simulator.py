@@ -8,15 +8,6 @@ class Simulator():
 
         self.reset_results()
 
-    def set_game(self, game):
-        self.game = game
-
-    def set_player1(self, player1):
-        self.player1 = player1
-
-    def set_player2(self, player2):
-        self.player2 = player2
-
     def reset_results(self):
         self.num_player1_wins = 0
         self.num_player2_wins = 0

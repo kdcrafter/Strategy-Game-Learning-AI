@@ -19,11 +19,11 @@ class Game(ABC):
         pass
 
     @abstractmethod
-    def get_result(self):
+    def get_next_copy(self, action):
         pass
 
     @abstractmethod
-    def get_next_copy(self, action):
+    def get_result(self):
         pass
 
     @abstractmethod

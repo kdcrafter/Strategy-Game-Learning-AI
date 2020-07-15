@@ -14,5 +14,6 @@ if __name__ == '__main__':
     print(simulator.num_player1_wins, simulator.num_player2_wins, simulator.num_draws)
 
     simulator.reset_results()
-    simulator.play(num_games=100)
+    player2.epsilon = 0.0
+    simulator.play(num_games=10)
     print(simulator.num_player1_wins, simulator.num_player2_wins, simulator.num_draws)
