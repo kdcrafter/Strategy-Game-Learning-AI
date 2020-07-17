@@ -4,35 +4,20 @@ import numpy as np
 from collections import defaultdict
 
 class Minmax(Agent):
-    def __init__(self, best_random_action=False):
+    def __init__(self):
         super().__init__()
 
-        self.best_random_action = best_random_action
         self.cache = defaultdict(lambda: None)
 
     def act(self, game):
-        if self.best_random_action:
-            return self.get_best_random_action(game)
-        else:
-            return self.get_best_action(game)
-
-    def get_best_action(self, game):
         valid_actions, game_values = self.get_action_values(game)
         best_index = self.get_best_index(game.current_player, game_values)
         return valid_actions[best_index]
 
-    def get_best_random_action(self, game):
-        valid_actions, game_values = self.get_action_values(game)
-
-        best_value = self.get_best_game_value(game.current_player, game_values)
-        best_indexes = np.where(game_values==best_value)
-        best_actions = valid_actions[best_indexes]
-
-        return np.random.choice(best_actions, 1)[0]
-
     def get_action_values(self, game):
         valid_actions = game.get_valid_actions()
-        game_values = np.array([self.get_game_value(game.get_next_copy(action)) for action in valid_actions])
+        games = [game.get_next_copy(action) for action in valid_actions]
+        game_values = np.array([self.get_game_value(game) for game in games])
 
         return valid_actions, game_values
 

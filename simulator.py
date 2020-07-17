@@ -6,6 +6,9 @@ class Simulator():
         self.player1 = player1 # agent acting as player1 (1)
         self.player2 = player2 # agent acting as player2 (-1)
 
+        self.player1.player = 1
+        self.player1.player = -1
+
         self.reset_results()
 
     def reset_results(self):

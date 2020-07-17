@@ -5,17 +5,16 @@ from collections import deque
 
 # TODO: add epsilon/learning_rate decay
 # TODO: add learning logic
+# TODO: implement a double qlearning version
 
 class TabularQlearning(Agent):
-    def __init__(self, epsilon=0.5, learning_rate=0.5, discount_factor=0.5, init_qvalue=0.5, best_random_action=False):
+    def __init__(self, epsilon=0.5, learning_rate=0.5, discount_factor=0.5, init_qvalue=0.5):
         super().__init__()
 
         self.epsilon = epsilon
         self.learning_rate = learning_rate
         self.discount_factor = discount_factor
         self.init_qvalue = init_qvalue
-
-        self.best_random_action = best_random_action
 
         self.qtable = {}
 
@@ -27,10 +26,7 @@ class TabularQlearning(Agent):
             valid_actions = game.get_valid_actions()
             action = np.random.choice(valid_actions, 1)[0]
         else: # move based on q values
-            if self.best_random_action:
-                action = self.get_best_random_action(game)
-            else:
-                action = self.get_best_action(game)
+            action = self.get_best_action(game)
 
         self.update_history(game, action)
         return action
@@ -39,15 +35,6 @@ class TabularQlearning(Agent):
         valid_actions, qvalues = self.get_action_qvalues(game)
         best_index = self.get_best_index(game.current_player, qvalues)
         return valid_actions[best_index]
-
-    def get_best_random_action(self, game):
-        valid_actions, qvalues = self.get_action_qvalues(game)
-
-        best_qvalue = self.get_best_qvalue(game.current_player, qvalues)
-        best_indexes = np.where(qvalues==best_qvalue)
-        best_actions = valid_actions[best_indexes]
-
-        return np.random.choice(best_actions, 1)[0]
 
     def get_action_qvalues(self, game):
         valid_actions = game.get_valid_actions()
@@ -65,11 +52,7 @@ class TabularQlearning(Agent):
         if next_game is None:
             best_next_qvalue = 0.0
         else:
-            if self.best_random_action:
-                best_next_action = self.get_best_random_action(next_game)
-            else:
-                best_next_action = self.get_best_action(next_game)
-
+            best_next_action = self.get_best_action(next_game)
             best_next_qvalue = self.get_qvalue(next_game, best_next_action)
 
         qvalue = self.get_qvalue(game, action)
