@@ -16,43 +16,71 @@ class MonteCarloTreeSearch(Agent):
         valid_actions = game.get_valid_actions()
         games = [game.get_next_copy(action) for action in valid_actions]
 
-        parent = self.get_child(game)
-        children = np.array([self.get_child(game) for game in games])
-        ucb1_values = np.array([self.get_ucb1(parent, child) for child in children])
+        parent = self.get_node(game)
+        children = np.array([self.get_node(game) for game in games])
 
+        ucb1_values = np.array([child.get_ucb1(self.exploration_constant) for child in children])
         best_index = np.argmax(ucb1_values)
-        best_action = valid_actions(best_index)
+        return valid_actions[best_index]
 
+    def get_node(self, game):
+        if not game in self.cache:
+            node = Node()
+            self.cache[game] = node
+            return node
+        else:
+            return self.cache[game]
 
-        return np.argmax()
+    def end_turn_callback(self, game, action):
+        self.game_history.append(game)
 
-    def get_child(self, game):
-        return self.cache.get(game, Node())
+        next_game = game.get_next_copy(action)
+        finished, winner = game.get_result()
 
-    def get_ucb1(self, parent, child):
-        if child.num_visits == 0:
-            return float('inf')
+        if finished:
+            self.game_history.append(next_game)
 
-        success_rate = child.num_win_draws / child.num_visits
-        exploration_term = self.exploration_constant * math.sqrt(math.log(parent.num_visits) / child.num_visits)
-        return success_rate + exploration_term
+    def gameover_callback(self, result):
+        # if game ended before agent did anything
+        if not self.game_history:
+            return
 
-    def update_history(self):
-        self.game_history.append()
+        parent_game = self.game_history[0]
 
-    def game_overcallback(self, result):
-        for game in self.game_history:
+        parent_node = self.get_node(parent_game)
+        parent_node.num_visits += 1
+        if result == -parent_game.current_player or result == 0:
+            parent_node.num_win_draws += 1
+
+        for game in self.game_history[1:]:
             node = self.get_node(game)
-
             node.num_visits += 1
-
-            if result == game.current_player or result == 0:
+            if result == -game.current_player or result == 0:
                 node.num_win_draws += 1
+
+            node.parents.add(parent_node)
+            parent_node = node
 
         self.game_history.clear()
 
 class Node():
     def __init__(self):
+        self.parents = set()
+
         self.num_win_draws = 0
         self.num_visits = 0
+
+    def get_parent_visits(self):
+        sum = 0
+        for parent in self.parents:
+            sum += parent.num_visits
+        return sum
+
+    def get_ucb1(self, exploration_constant):
+        if self.num_visits == 0:
+            return float('inf')
+
+        success_rate = self.num_win_draws / self.num_visits
+        exploration_term = exploration_constant * math.sqrt(math.log(self.get_parent_visits()) / self.num_visits)
+        return success_rate + exploration_term
 

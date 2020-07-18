@@ -6,9 +6,6 @@ class Simulator():
         self.player1 = player1 # agent acting as player1 (1)
         self.player2 = player2 # agent acting as player2 (-1)
 
-        self.player1.player = 1
-        self.player1.player = -1
-
         self.reset_results()
 
     def reset_results(self):
@@ -26,6 +23,9 @@ class Simulator():
                     action = self.player1.act(self.game.get_copy())
                 else:
                     action = self.player2.act(self.game.get_copy())
+
+                self.player1.end_turn_callback(self.game.get_copy(), action)
+                self.player2.end_turn_callback(self.game.get_copy(), action)
 
                 valid = self.game.apply(action)
                 
