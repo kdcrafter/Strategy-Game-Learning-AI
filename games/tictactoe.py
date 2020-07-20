@@ -28,8 +28,14 @@ class Tictactoe(Game):
         else:
             self.board = board
 
+    def get_actions(self):
+        return ACTIONS
+
     def get_valid_actions(self):
         return ACTIONS[np.where(self.board==0)]
+
+    def get_invalid_actions(self):
+        return ACTIONS[np.where(self.board!=0)]
 
     def get_result(self):
         # calculate array that shows which sqaures belong to player who made the last move

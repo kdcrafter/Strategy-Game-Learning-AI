@@ -11,7 +11,15 @@ class Game(ABC):
         pass
 
     @abstractmethod
+    def get_actions(self):
+        pass
+
+    @abstractmethod
     def get_valid_actions(self):
+        pass
+
+    @abstractmethod
+    def get_invalid_actions(self):
         pass
 
     @abstractmethod
