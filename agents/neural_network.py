@@ -1,5 +1,6 @@
 from agent import Agent
 
+import numpy as np
 import tensorflow as tf
 from collections import deque
 
@@ -14,8 +15,7 @@ class NeuralNetwork(Agent):
             tf.keras.layers.Dense(9)
         ])
 
-        loss_object = tf.keras.losses.MSE()
-        self.optimizer = tf.keras.optimizersSGD(learning_rate=0.1)
+        self.optimizer = tf.keras.optimizers.SGD(learning_rate=0.1)
 
         self.discount_factor = discount_factor
 
@@ -24,27 +24,29 @@ class NeuralNetwork(Agent):
 
     def act(self, game):
         inputs = self.get_inputs(game)
-        action = tf.argmax(self.model(inputs))
+        action = tf.argmax(self.model(inputs), axis=1).numpy()[0]
         self.update_history(game, action)
         return action
 
     def loss(self, x, y):
         y_ = self.model(x)
-        return self.loss_obejct(y_true=y, y_pred=y_)
+        return tf.keras.losses.MSE(y_true=y, y_pred=y_)
 
     def grad(self, inputs, targets):
         with tf.GradientTape() as tape:
-            loss_value = loss(inputs, targets)
+            loss_value = self.loss(inputs, targets)
         return loss_value, tape.gradient(loss_value, self.model.trainable_variables)
 
     def get_inputs(self, game):
-        return tf.convert_to_tensor(game.board)
+        inputs = tf.convert_to_tensor(game.board)
+        return tf.reshape(inputs, [1, 9])
 
     def get_targets(self, game, action, result, target_value):
         targets = np.zeros((9,))
         targets[game.get_invalid_actions()] = -1
         targets[action] = target_value
-        return tf.convert_to_tensor(targets)
+        targets = tf.convert_to_tensor(targets)
+        return tf.reshape(targets, [1, 9])
 
     def update_history(self, game, action):
         self.game_history.appendleft(game)
@@ -59,7 +61,7 @@ class NeuralNetwork(Agent):
         next_action = self.action_history[0]
 
         inputs = self.get_inputs(next_game)
-        target_value = -1 if next_game.current_player == -result else 1
+        target_value = -1 if next_game.current_player == -result else 1 # -1 if loss else 1
         targets = self.get_targets(next_game, next_action, result, target_value)
 
         loss_value, grads = self.grad(inputs, targets)
