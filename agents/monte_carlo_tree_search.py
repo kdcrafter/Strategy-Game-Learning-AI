@@ -12,6 +12,8 @@ class MonteCarloTreeSearch(Agent):
 
         self.exploration_constant = exploration_constant
 
+        
+
     def act(self, game):
         valid_actions = game.get_valid_actions()
         games = [game.get_next_copy(action) for action in valid_actions]

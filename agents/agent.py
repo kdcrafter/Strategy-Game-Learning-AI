@@ -4,12 +4,11 @@ class Agent(ABC):
     def __init__(self):
         super().__init__()
 
+        self.end_turn_callback = None
+        self.gameover_callback = None
+
+        # player color ?
+
     @abstractmethod
     def act(self, game):
-        pass
-
-    def end_turn_callback(self, game, agent):
-        pass
-
-    def gameover_callback(self, result):
         pass

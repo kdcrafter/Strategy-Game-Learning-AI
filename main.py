@@ -6,21 +6,15 @@ from time import time
 import numpy as np
 
 if __name__ == '__main__':
-    playera = NeuralNetwork()
-    playerb = RandomAction()
+    player = NeuralNetwork()
 
-    simulator = Simulator(Tictactoe(), playera, playerb)
+    # player learns to play tictactoe
+    simulator = Simulator(Tictactoe(), player, RandomAction())
     simulator.play(num_games=10000)
-    print(simulator.num_player1_wins, simulator.num_player2_wins, simulator.num_draws)
 
-    simulator = Simulator(Tictactoe(), playerb, playera)
-    simulator.play(num_games=10000)
-    print(simulator.num_player1_wins, simulator.num_player2_wins, simulator.num_draws)
+    # player is tested
+    simulator = Simulator(Tictactoe(), player, RandomAction())
+    simulator.play(num_games=1000)
 
-    simulator = Simulator(Tictactoe(), playera, playerb)
-    simulator.play(num_games=100)
-    print(simulator.num_player1_wins, simulator.num_player2_wins, simulator.num_draws)
-
-    simulator = Simulator(Tictactoe(), playerb, playera)
-    simulator.play(num_games=100)
-    print(simulator.num_player1_wins, simulator.num_player2_wins, simulator.num_draws)
+    simulator.set_opponent(Minmax())
+    simulator.play(num_games=1000)

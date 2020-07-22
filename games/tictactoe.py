@@ -1,61 +1,58 @@
 from game import Game
 import numpy as np
 
-ACTIONS = np.arange(9, dtype=np.int8)
-CHECKS = np.array([
-    [0, 1, 2], # rows
-    [3, 4, 5],
-    [6, 7, 8],
-
-    [0, 3, 6], # columns
-    [1, 4, 7],
-    [2, 5, 8],
-
-    [0, 4, 8], # diagnals
-    [2, 4, 6]
-], dtype=np.int8)
+# sorted(list(permutations(range(3), 2)) + list(zip(range(3), range(3))))
+ACTIONS = [
+    (0,0),(1,0),(2,0),
+    (0,1),(1,1),(2,1),
+    (0,2),(1,2),(2,2)
+]
 
 class Tictactoe(Game):
-    def __init__(self, current_player=1, board=None):
-        super().__init__(current_player=current_player, board=board)
-        self.setup(current_player=current_player, board=board)
+    def setup(self):
+        self.current_player = 1
+        self.last_action = None
+        self.board = np.zeros((3,3), dtype=np.int8)
 
-    def setup(self, current_player=1, board=None):
-        self.current_player = current_player
-
-        if board is None:
-            self.board = np.zeros(9, dtype=np.int8)
-        else:
-            self.board = board
-
-    def get_actions(self):
+    def actions(self):
         return ACTIONS
 
-    def get_valid_actions(self):
-        return ACTIONS[np.where(self.board==0)]
+    def valid_actions(self):
+        return filter(lambda action: self.board[action] == 0, ACTIONS)
 
-    def get_invalid_actions(self):
-        return ACTIONS[np.where(self.board!=0)]
+    def invalid_actions(self):
+        return filter(lambda action: self.board[action] != 0, ACTIONS)
 
-    def get_result(self):
-        # calculate array that shows which sqaures belong to player who made the last move
+    def apply(self, action):
+        # if action is invalid, do nothing and let caller decide what to do
+        if self.board[action] != 0:
+            return False
+
+        self.board[action] = self.current_player
+        self.current_player = -self.current_player
+        self.last_action = action
+
+        return True
+
+    def result(self):
+        row, column = last_action
         previous_player = -self.current_player
-        player_board = self.board==previous_player
 
-        # check if previous player has a 3-in-a-row
-        for sqaures in CHECKS:
-            if np.all(player_board[sqaures]):
+        checks = [
+            self.board[row, range(3)], # column
+            self.board[range(3), column], # row
+        ]
+
+        if row == column:
+            checks.append(self.board[range(3), range(3)]) # diagnal
+        if 2 - row == column:
+            checks.append(self.board[reversed(range(3)), range(3)]) # anti-diagnal
+
+        for squares in checks:
+            if np.all(squares == previous_player):
                 return True, previous_player
 
-        return np.all(self.board!=0), 0
-
-    def get_copy(self):
-        return Tictactoe(self.current_player, np.copy(self.board))
-
-    def get_next_copy(self, action):
-        next_game = self.get_copy()
-        next_game.apply(action)
-        return next_game
+        return np.all(self.board != 0), 0
 
     def get_symbol(self, value):
         if value == 1:
@@ -65,24 +62,16 @@ class Tictactoe(Game):
         else:
             return ' '
 
-    def apply(self, action):
-        # if action is invalid, do nothing and let caller decide what to do
-        if self.board[action] != 0:
-            return False
-
-        self.board[action] = self.current_player
-        self.current_player = -self.current_player
-
-        return True
-
     def __str__(self):
-        return f'''
-        {self.get_symbol(self.board[0])}|{self.get_symbol(self.board[1])}|{self.get_symbol(self.board[2])}
-        -----
-        {self.get_symbol(self.board[3])}|{self.get_symbol(self.board[4])}|{self.get_symbol(self.board[5])}
-        -----
-        {self.get_symbol(self.board[6])}|{self.get_symbol(self.board[7])}|{self.get_symbol(self.board[8])}
-        '''
+        line = '|-----|\n'
+        string = line
+
+        for row in range(3):
+            symbols = map(self.get_symbol, self.board[row])
+            string += '|' + '|'.join(symbols) + '|'
+            string += line
+
+        return string
 
     @property
     def current_player(self):
@@ -91,6 +80,14 @@ class Tictactoe(Game):
     @current_player.setter
     def current_player(self, value):
         self._current_player = value
+
+    @property
+    def last_action(self):
+        return self._board
+
+    @last_action.setter
+    def last_action(self, value):
+        self._last_action = value
 
     @property
     def board(self):
