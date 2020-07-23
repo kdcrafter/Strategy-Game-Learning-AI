@@ -1,11 +1,11 @@
 from agent import Agent
 
-import numpy as np
+import random
 
 class RandomAction(Agent):
     def __init__(self):
         super().__init__()
 
     def act(self, game):
-        valid_actions = game.get_valid_actions()
-        return np.random.choice(valid_actions, 1)[0]
+        valid_actions = game.valid_actions()
+        return random.choice(valid_actions)

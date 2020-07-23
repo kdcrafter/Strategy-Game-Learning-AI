@@ -8,6 +8,7 @@ class Agent(ABC):
         self.gameover_callback = None
 
         # player color ?
+        # minmax agent would only need to use max
 
     @abstractmethod
     def act(self, game):

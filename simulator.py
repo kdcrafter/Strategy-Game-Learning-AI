@@ -41,9 +41,9 @@ class Simulator():
                 finished, winner = self.game.result()
 
             if self.player.gameover_callback != None:
-                self.player.gameover_callback(winner)
+                self.player.gameover_callback(self.game, winner)
             if self.opponent.gameover_callback != None:
-                self.opponent.gameover_callback(winner)
+                self.opponent.gameover_callback(self.game, winner)
 
             self.update_results(winner)
             self.player_color = -self.player_color

@@ -83,7 +83,7 @@ class Tictactoe(Game):
 
     @property
     def last_action(self):
-        return self._board
+        return self._last_action
 
     @last_action.setter
     def last_action(self, value):

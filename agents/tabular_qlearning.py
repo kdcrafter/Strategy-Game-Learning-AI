@@ -1,18 +1,25 @@
 from agent import Agent
 
-import numpy as np
 from collections import deque
+import math
 
-# TODO: add epsilon/learning_rate decay
-# TODO: add learning logic
 # TODO: implement a double qlearning version
 
-class TabularQlearning(Agent):
-    def __init__(self, epsilon=0.5, learning_rate=0.5, discount_factor=0.5, init_qvalue=0.5):
+class TabularQlearning(LearningAgent):
+    def __init__(self, epsilon_init=0.5, epsilon_drop_rate=0.5, epsilon_drop_step=10, learning_rate_init=0.5, learning_rate_drop_rate=0.5, learning_rate_drop_step=10, discount_factor=1.0):
         super().__init__()
 
-        self.epsilon = epsilon
-        self.learning_rate = learning_rate
+        self.epsilon = epsilon_init
+        self.epsilon_init = epsilon_init
+        self.epsilon_drop_rate = epsilon_drop_rate
+        self.epsilon_drop_step = epsilon_drop_step
+
+        self.learning_rate = learning_rate_init
+        self.learning_rate_init = learning_rate_init
+        self.learning_rate_drop_rate = learning_rate_drop_rate
+        self.learning_rate_drop_step = learning_rate_drop_step 
+
+        self.games_played = 0
         self.discount_factor = discount_factor
         self.init_qvalue = init_qvalue
 
@@ -22,14 +29,28 @@ class TabularQlearning(Agent):
         self.action_history = deque()
 
     def act(self, game):
-        if np.random.uniform() < self.epsilon: # move randomly
-            valid_actions = game.get_valid_actions()
-            action = np.random.choice(valid_actions, 1)[0]
+        if random.uniform() < self.epsilon: # move randomly
+            valid_actions = game.valid_actions()
+            action = random.choice(valid_actions)
         else: # move based on q values
             action = self.get_best_action(game)
 
-        self.update_history(game, action)
+        if self.learning:
+            self.update_history(game, action)
+
         return action
+
+    def learn(self):
+        self.learning = True
+        self.epsilon = self.epsilon_init
+        self.learning_rate = self.learning_rate_init
+        self.gameover_callback = self.update_qtable
+
+    def stop_learning(self):
+        self.learning = False
+        self.epsilon = 0.0
+        self.learning_rate = 0.00001
+        self.gameover_callback = None
 
     def get_best_action(self, game):
         valid_actions, qvalues = self.get_action_qvalues(game)
@@ -37,13 +58,13 @@ class TabularQlearning(Agent):
         return valid_actions[best_index]
 
     def get_action_qvalues(self, game):
-        valid_actions = game.get_valid_actions()
-        game_values = np.array([self.get_qvalue(game, action) for action in valid_actions])
+        valid_actions = game.valid_actions()
+        game_values = [self.get_qvalue(game, action) for action in valid_actions]
 
         return valid_actions, game_values
 
     def get_qvalue(self, game, action):
-        return self.qtable.get((game, action), game.current_player*self.init_qvalue)
+        return self.qtable.get((game, action), 0.0)
 
     def set_qvalue(self, game, action, qvalue):
         self.qtable[(game, action)] = qvalue
@@ -62,21 +83,25 @@ class TabularQlearning(Agent):
 
     def get_best_qvalue(self, current_player, qvalues):
         if current_player == 1:
-            return np.max(qvalues)
+            return max(qvalues)
         else:
-            return np.min(qvalues)
+            return min(qvalues)
 
     def get_best_index(self, current_player, qvalues):
         if current_player == 1:
-            return np.argmax(qvalues)
+            return qvalues.index(max(qvalues))
         else:
-            return np.argmin(qvalues)
+            return qvalues.index(min(qvalues))
+
+    def get_decay(self, init, drop_rate, drop_step):
+        exponent = math.floor((1+self.games_played) / drop_step)
+        return init * math.pow(drop_rate, exponent)
 
     def update_history(self, game, action):
         self.game_history.appendleft(game)
         self.action_history.appendleft(action)
 
-    def gameover_callback(self, result):
+    def update_qtable(self, game, result):
         # if game ended before agent did anything
         if not self.game_history or not self.action_history:
             return
@@ -92,4 +117,12 @@ class TabularQlearning(Agent):
 
         self.game_history.clear()
         self.action_history.clear()
-        
+
+        self.games_played += 1
+
+        if self.games_played % self.epsilon_drop_step == 0:
+            self.epsilon = self.get_decay(self.epsilon_init, self.epsilon_drop_rate, self.epsilon_drop_step)
+
+        if self.games_played % self.learning_rate_drop_step == 0:     
+            self.learning_rate = self.get_decay(self.learning_rate_init, self.learning_rate_drop_rate, self.learning_rate_drop_step)
+

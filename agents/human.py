@@ -6,6 +6,6 @@ class Human(Agent):
 
     def act(self, game):
         print(game)
-        print('Actions:', game.get_valid_actions())
+        print('Actions:', game.valid_actions())
         print('Input:', end=' ')
-        return int(input())
+        return eval(input())

@@ -4,10 +4,11 @@ import numpy as np
 import tensorflow as tf
 from collections import deque
 
-class NeuralNetwork(Agent):
+class NeuralNetwork(LearningAgent):
     def __init__(self, discount_factor=1.0):
         super().__init__()
 
+        # TODO: allow model to work with any game
         self.model = tf.keras.Sequential([
             tf.keras.layers.Dense(9, activation=tf.nn.relu, input_shape=(9,)),
             tf.keras.layers.Dense(36, activation=tf.nn.relu),
