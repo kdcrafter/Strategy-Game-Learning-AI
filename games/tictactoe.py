@@ -18,10 +18,10 @@ class Tictactoe(Game):
         return ACTIONS
 
     def valid_actions(self):
-        return filter(lambda action: self.board[action] == 0, ACTIONS)
+        return list(filter(lambda action: self.board[action] == 0, ACTIONS))
 
     def invalid_actions(self):
-        return filter(lambda action: self.board[action] != 0, ACTIONS)
+        return list(filter(lambda action: self.board[action] != 0, ACTIONS))
 
     def apply(self, action):
         # if action is invalid, do nothing and let caller decide what to do
@@ -35,7 +35,7 @@ class Tictactoe(Game):
         return True
 
     def result(self):
-        row, column = last_action
+        row, column = self.last_action
         previous_player = -self.current_player
 
         checks = [
@@ -46,7 +46,7 @@ class Tictactoe(Game):
         if row == column:
             checks.append(self.board[range(3), range(3)]) # diagnal
         if 2 - row == column:
-            checks.append(self.board[reversed(range(3)), range(3)]) # anti-diagnal
+            checks.append(self.board[[2,1,0], range(3)]) # anti-diagnal
 
         for squares in checks:
             if np.all(squares == previous_player):
@@ -68,7 +68,7 @@ class Tictactoe(Game):
 
         for row in range(3):
             symbols = map(self.get_symbol, self.board[row])
-            string += '|' + '|'.join(symbols) + '|'
+            string += '|' + '|'.join(symbols) + '|\n'
             string += line
 
         return string

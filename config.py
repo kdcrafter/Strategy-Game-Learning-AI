@@ -1,0 +1,1 @@
+TRAINING_AGENTS_DIRECTORY = 'training_agents/'

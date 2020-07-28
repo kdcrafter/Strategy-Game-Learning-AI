@@ -7,9 +7,10 @@ class Agent(ABC):
         self.end_turn_callback = None
         self.gameover_callback = None
 
-        # player color ?
-        # minmax agent would only need to use max
-
     @abstractmethod
     def act(self, game):
+        pass
+
+    @abstractmethod
+    def __str__(self):
         pass

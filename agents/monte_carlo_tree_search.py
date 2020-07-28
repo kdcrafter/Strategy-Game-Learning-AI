@@ -24,43 +24,44 @@ class MonteCarloTreeSearch(LearningAgent):
             values = [child.success_rate() for child in children]
     
         best_index = values.index(max(values))
-
-        self.update_history(game)
         return valid_actions[best_index]
 
     def learn(self):
         self.learning = True
-        self.end_turn_call_back = self.update_history
+        self.end_turn_callback = self.update_history
         self.gameover_callback = self.update_nodes
 
     def stop_learning(self):
         self.learning = False
-        self.end_turn_call_back = None
+        self.end_turn_callback = None
         self.gameover_callback = None
 
     def update_history(self, game, action):
-        self.game_history.append(game)
+        self.game_history.append(game.copy())
 
     def update_nodes(self, game, result):
         parent_game = self.game_history[0]
 
         parent_node = self.nodes[parent_game]
-        parent_node.num_visits += 1
+        parent_node.visits += 1
 
         #if loss, count as win
         if result == -parent_game.current_player or result == 0:
-            parent_node.num_win_draws += 1
+            parent_node.win_draws += 1
 
         for game in list(self.game_history)[1:]:
             node = self.nodes[game]
-            node.num_visits += 1
+            node.visits += 1
             if result == -game.current_player or result == 0:
-                node.num_win_draws += 1
+                node.win_draws += 1
 
             node.parents.add(parent_node)
             parent_node = node
 
         self.game_history.clear()
+
+    def __str__(self):
+        return 'MCTS'
 
 class Node():
     def __init__(self):
@@ -76,7 +77,7 @@ class Node():
         return self.win_draws / self.visits
 
     def parent_visits(self):
-        return reduce(lambda sum,node: sum+node.visits, self.parents, 0)
+        return reduce(lambda s,node: s+node.visits, self.parents, 0)
 
     def ucb1(self, exploration_constant):
         if self.visits == 0:
@@ -85,4 +86,3 @@ class Node():
         success_rate = self.win_draws / self.visits
         exploration_term = exploration_constant * math.sqrt(math.log(self.parent_visits()) / self.visits)
         return success_rate + exploration_term
-

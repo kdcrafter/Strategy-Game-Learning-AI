@@ -1,7 +1,7 @@
-from agent import Agent
+from learning_agent import LearningAgent
 
 from collections import deque
-import math
+import math, random
 
 # TODO: implement a double qlearning version
 
@@ -21,7 +21,6 @@ class TabularQlearning(LearningAgent):
 
         self.games_played = 0
         self.discount_factor = discount_factor
-        self.init_qvalue = init_qvalue
 
         self.qtable = {}
 
@@ -29,7 +28,7 @@ class TabularQlearning(LearningAgent):
         self.action_history = deque()
 
     def act(self, game):
-        if random.uniform() < self.epsilon: # move randomly
+        if random.uniform(0,1) < self.epsilon: # move randomly
             valid_actions = game.valid_actions()
             action = random.choice(valid_actions)
         else: # move based on q values
@@ -42,14 +41,14 @@ class TabularQlearning(LearningAgent):
 
     def learn(self):
         self.learning = True
-        self.epsilon = self.epsilon_init
-        self.learning_rate = self.learning_rate_init
+        self.end_turn_callback = self.update_history
         self.gameover_callback = self.update_qtable
 
     def stop_learning(self):
         self.learning = False
         self.epsilon = 0.0
         self.learning_rate = 0.00001
+        self.end_turn_callback = None
         self.gameover_callback = None
 
     def get_best_action(self, game):
@@ -98,7 +97,7 @@ class TabularQlearning(LearningAgent):
         return init * math.pow(drop_rate, exponent)
 
     def update_history(self, game, action):
-        self.game_history.appendleft(game)
+        self.game_history.appendleft(game.copy())
         self.action_history.appendleft(action)
 
     def update_qtable(self, game, result):
@@ -126,3 +125,5 @@ class TabularQlearning(LearningAgent):
         if self.games_played % self.learning_rate_drop_step == 0:     
             self.learning_rate = self.get_decay(self.learning_rate_init, self.learning_rate_drop_rate, self.learning_rate_drop_step)
 
+    def __str__(self):
+        return 'TabularQlearning'

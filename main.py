@@ -1,24 +1,32 @@
 from games import Tictactoe
-from agents import Human, RandomAction, Minmax, TabularQlearning, MonteCarloTreeSearch, NeuralNetwork
+from agents import Human, RandomAction, Minmax, TabularQlearning, MonteCarloTreeSearch
 from simulator import Simulator
 
 from time import time
 import numpy as np
 
 if __name__ == '__main__':
-    player = NeuralNetwork()
+    # set up
+    game = Tictactoe()
+
+    player = MonteCarloTreeSearch()
+    random_action = RandomAction()
+
+    minmax = Minmax()
+    minmax.load('tictactoe_minmax')
 
     # player learns to play tictactoe
-    simulator = Simulator(Tictactoe(), player, RandomAction())
-    simulator.play(num_games=10000)
+    simulator = Simulator(game, player, [random_action, minmax])
+    simulator.play(num_games=100000)
 
-    # add a learn/stop learning function ?
+    # player is stored
+    player.stop_learning()
+    player.save('tictactoe_mcts')
+
+    print(simulator)
 
     # player is tested
-    simulator = Simulator(Tictactoe(), player, RandomAction())
-    simulator.play(num_games=1000)
-
-    simulator.set_opponent(Minmax())
-    simulator.play(num_games=1000)
+    simulator.reset_scores()
+    simulator.play(num_games=400)
 
     print(simulator)
