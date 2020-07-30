@@ -1,85 +1,158 @@
-# from learning_agent import LearningAgent
+from learning_agent import LearningAgent
+from config import TRAINING_AGENTS_DIRECTORY
 
-# import numpy as np
-# import tensorflow as tf
-# from collections import deque
+import numpy as np
+import tensorflow as tf
+from collections import deque
+import dill, os
 
-# class NeuralNetwork(LearningAgent):
-#     def __init__(self, discount_factor=1.0):
-#         super().__init__()
+# batch size parameter ?
 
-#         # TODO: allow model to work with any game
-#         self.model = tf.keras.Sequential([
-#             tf.keras.layers.Dense(9, activation=tf.nn.relu, input_shape=(9,)),
-#             tf.keras.layers.Dense(36, activation=tf.nn.relu),
-#             tf.keras.layers.Dense(36, activation=tf.nn.sigmoid),
-#             tf.keras.layers.Dense(9)
-#         ])
+"""
+Sample Model:
 
-#         self.optimizer = tf.keras.optimizers.SGD(learning_rate=0.1)
+model = tf.keras.Sequential([
+    tf.keras.layers.Reshape((9,), input_shape=(3,3,)),
+    tf.keras.layers.Dense(9, activation=tf.nn.relu),
+    tf.keras.layers.Dense(36, activation=tf.nn.relu),
+    tf.keras.layers.Dense(36, activation=tf.nn.sigmoid),
+    tf.keras.layers.Dense(9),
+])
+"""
 
-#         self.discount_factor = discount_factor
+class NeuralNetwork(LearningAgent):
+    def __init__(self, model, learning_rate=0.1, discount_factor=1.0):
+        super().__init__()
 
-#         self.game_history = deque()
-#         self.action_history = deque()
+        self.policy_model = tf.keras.models.clone_model(model)
+        self.target_model = tf.keras.models.clone_model(model)
 
-#     def act(self, game):
-#         inputs = self.get_inputs(game)
-#         action = tf.argmax(self.model(inputs), axis=1).numpy()[0]
-#         self.update_history(game, action)
-#         return action
+        self.optimizer = tf.keras.optimizers.SGD(learning_rate=learning_rate)
+        self.discount_factor = discount_factor
 
-#     def loss(self, x, y):
-#         y_ = self.model(x)
-#         return tf.keras.losses.MSE(y_true=y, y_pred=y_)
+        self.game_history = deque()
+        self.action_index_history = deque()
 
-#     def grad(self, inputs, targets):
-#         with tf.GradientTape() as tape:
-#             loss_value = self.loss(inputs, targets)
-#         return loss_value, tape.gradient(loss_value, self.model.trainable_variables)
+    def save(self, name):
+        if not os.path.isdir(TRAINING_AGENTS_DIRECTORY):
+            os.mkdir(TRAINING_AGENTS_DIRECTORY)
 
-#     def get_inputs(self, game):
-#         inputs = tf.convert_to_tensor(game.board)
-#         return tf.reshape(inputs, [1, 9])
+        filename = name + '.pickle'
+        pathname = os.path.join(TRAINING_AGENTS_DIRECTORY, filename)
 
-#     def get_targets(self, game, action, result, target_value):
-#         targets = np.zeros((9,))
-#         targets[game.get_invalid_actions()] = -1
-#         targets[action] = target_value
-#         targets = tf.convert_to_tensor(targets)
-#         return tf.reshape(targets, [1, 9])
+        with open(pathname, 'wb') as file:
+            attributes = self.__dict__.copy()
+            attributes['policy_model'] = self.get_weights(self.policy_model)
+            attributes['target_model'] = self.get_weights(self.target_model)
 
-#     def update_history(self, game, action):
-#         self.game_history.appendleft(game)
-#         self.action_history.appendleft(action)
+            data = (self.__class__, attributes)
+            dill.dump(data, file)
 
-#     def gameover_callback(self, result):
-#         # if game ended before agent did anything
-#         if not self.game_history or not self.action_history:
-#             return
+    def load(self, name):
+        assert(os.path.isdir(TRAINING_AGENTS_DIRECTORY))
 
-#         next_game = self.game_history[0]
-#         next_action = self.action_history[0]
+        filename = name + '.pickle'
+        pathname = os.path.join(TRAINING_AGENTS_DIRECTORY, filename)
 
-#         inputs = self.get_inputs(next_game)
-#         target_value = -1 if next_game.current_player == -result else 1 # -1 if loss else 1
-#         targets = self.get_targets(next_game, next_action, result, target_value)
+        with open(pathname, 'rb') as file:
+            cls, attributes = dill.load(file)
+            assert(self.__class__ == cls)
 
-#         loss_value, grads = self.grad(inputs, targets)
-#         self.optimizer.apply_gradients(zip(grads, self.model.trainable_variables))
+            self.assign_weights(attributes['policy_model'], self.policy_model)
+            self.assign_weights(attributes['target_model'], self.target_model)
+            del attributes['policy_model']
+            del attributes['target_model']
 
-#         for curr_game, curr_action in zip(list(self.game_history)[1:], list(self.action_history)[1:]):
-#             inputs = self.get_inputs(next_game)
-#             max_outputs_value = tf.reduce_max(self.model(inputs))
-#             targets = self.get_targets(curr_game, curr_action, result, self.discount_factor*max_outputs_value)
+            self.__dict__.update(attributes)
 
-#             loss_value, grads = self.grad(inputs, targets)
-#             self.optimizer.apply_gradients(zip(grads, self.model.trainable_variables))
+    def act(self, game):
+        inputs = self.get_inputs(game)
+        outputs = self.target_model(inputs)
+        best_index = tf.argmax(outputs, axis=1)[0]
+        best_action = game.actions()[best_index]
 
-#             next_game = curr_game
+        if self.learning:
+            self.update_history(game, best_index)
 
-#         self.game_history.clear()
-#         self.action_history.clear()
+        return best_action
 
-    # def __str__(self):
-    #     return 'NN'
+    def learn(self):
+        self.learning = True
+        self.gameover_callback = self.update_model
+
+    def stop_learning(self):
+        self.learning = False
+        self.gameover_callback = None
+
+    def loss(self, x, y):
+        y_ = self.policy_model(x)
+        return tf.keras.losses.MSE(y_true=y, y_pred=y_)
+
+    def grad(self, inputs, targets):
+        with tf.GradientTape() as tape:
+            loss_value = self.loss(inputs, targets)
+        return loss_value, tape.gradient(loss_value, self.policy_model.trainable_variables)
+
+    def get_inputs(self, game):
+        # get tensor of shape (1, board width, board height)
+        inputs = tf.convert_to_tensor(game.board)
+        return tf.reshape(inputs, (1,) + game.board.shape)
+
+    def get_targets(self, game, action_index, target_value):
+        num_actions = len(game.actions())
+
+        targets = np.zeros(num_actions)
+        targets[game.invalid_indexes()] = 0
+        targets[action_index] = target_value
+
+        # get tensor of shape (1, # of actions) where values of 0 are bad actions
+        targets = tf.convert_to_tensor(targets)
+        return tf.reshape(targets, (1, num_actions))
+
+    def get_weights(self, model):
+        return [layer.get_weights() for layer in model.layers]
+
+    def assign_weights(self, weights_set, target_model):
+        for weights, target_layer in zip(weights_set, target_model.layers):
+            target_layer.set_weights(weights)
+
+    def update_history(self, game, action):
+        # games and actions are in reverse chronological order
+        self.game_history.appendleft(game)
+        self.action_index_history.appendleft(action)
+
+    def update_model(self, game, result):
+        # if game ended before agent did anything
+        if not self.game_history or not self.action_index_history:
+            return
+
+        # get last game state and action index
+        next_game = self.game_history.popleft()
+        next_action_index = self.action_index_history.popleft()
+
+        inputs = self.get_inputs(next_game)
+        target_value = 0 if result == -next_game.current_player else 1 # 0 if loss else 1
+        targets = self.get_targets(next_game, next_action_index, target_value)
+
+        loss_value, grads = self.grad(inputs, targets)
+        self.optimizer.apply_gradients(zip(grads, self.policy_model.trainable_variables))
+
+        for curr_game, curr_action_index in zip(self.game_history, self.action_index_history):
+            inputs = self.get_inputs(next_game)
+            outputs = self.target_model(inputs)
+            max_output = tf.reduce_max(outputs)
+            targets = self.get_targets(curr_game, curr_action_index, self.discount_factor*max_output)
+
+            loss_value, grads = self.grad(inputs, targets)
+            self.optimizer.apply_gradients(zip(grads, self.policy_model.trainable_variables))
+
+            next_game = curr_game
+
+        policy_weights = self.get_weights(self.policy_model)
+        self.assign_weights(policy_weights, self.target_model)
+
+        self.game_history.clear()
+        self.action_index_history.clear()
+
+    def __str__(self):
+        return 'NeuralNetwork'

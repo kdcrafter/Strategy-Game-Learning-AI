@@ -97,7 +97,8 @@ class TabularQlearning(LearningAgent):
         return init * math.pow(drop_rate, exponent)
 
     def update_history(self, game, action):
-        self.game_history.appendleft(game.copy())
+        # games and actions are in reverse chronological order
+        self.game_history.appendleft(game)
         self.action_history.appendleft(action)
 
     def update_qtable(self, game, result):
@@ -105,12 +106,13 @@ class TabularQlearning(LearningAgent):
         if not self.game_history or not self.action_history:
             return
 
-        next_game = self.game_history[0]
-        next_action = self.action_history[0]
+        # get last game state and action
+        next_game = self.game_history.popleft()
+        next_action = self.action_history.popleft()
 
         self.update_qvalue(result, next_game, next_action)
 
-        for curr_game, curr_action in zip(list(self.game_history)[1:], list(self.action_history)[1:]):
+        for curr_game, curr_action in zip(self.game_history, self.action_history):
             self.update_qvalue(result, curr_game, curr_action, next_game)
             next_game = curr_game
 

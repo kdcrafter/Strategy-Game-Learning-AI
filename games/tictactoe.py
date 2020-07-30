@@ -23,6 +23,12 @@ class Tictactoe(Game):
     def invalid_actions(self):
         return list(filter(lambda action: self.board[action] != 0, ACTIONS))
 
+    def valid_indexes(self):
+        return [index for index, action in enumerate(ACTIONS) if self.board[action] == 0]
+
+    def invalid_indexes(self):
+        return [index for index, action in enumerate(ACTIONS) if self.board[action] != 0]
+
     def apply(self, action):
         # if action is invalid, do nothing and let caller decide what to do
         if self.board[action] != 0:

@@ -20,6 +20,14 @@ class Game(ABC):
         pass
 
     @abstractmethod
+    def valid_indexes(self):
+        pass
+
+    @abstractmethod
+    def invalid_indexes(self):
+        pass
+
+    @abstractmethod
     def apply(self, action):
         pass
 

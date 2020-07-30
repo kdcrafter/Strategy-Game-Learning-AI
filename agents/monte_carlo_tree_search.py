@@ -37,10 +37,10 @@ class MonteCarloTreeSearch(LearningAgent):
         self.gameover_callback = None
 
     def update_history(self, game, action):
-        self.game_history.append(game.copy())
+        self.game_history.append(game) # games are in chronological order
 
     def update_nodes(self, game, result):
-        parent_game = self.game_history[0]
+        parent_game = self.game_history.popleft() # get first game state
 
         parent_node = self.nodes[parent_game]
         parent_node.visits += 1
@@ -49,7 +49,7 @@ class MonteCarloTreeSearch(LearningAgent):
         if result == -parent_game.current_player or result == 0:
             parent_node.win_draws += 1
 
-        for game in list(self.game_history)[1:]:
+        for game in self.game_history:
             node = self.nodes[game]
             node.visits += 1
             if result == -game.current_player or result == 0:
