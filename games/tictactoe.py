@@ -1,4 +1,5 @@
 from game import Game
+
 import numpy as np
 
 # sorted(list(permutations(range(3), 2)) + list(zip(range(3), range(3))))
@@ -18,16 +19,10 @@ class Tictactoe(Game):
         return ACTIONS
 
     def valid_actions(self):
-        return list(filter(lambda action: self.board[action] == 0, ACTIONS))
+        return [action for action in ACTIONS if self.board[action] == 0]
 
     def invalid_actions(self):
-        return list(filter(lambda action: self.board[action] != 0, ACTIONS))
-
-    def valid_indexes(self):
-        return [index for index, action in enumerate(ACTIONS) if self.board[action] == 0]
-
-    def invalid_indexes(self):
-        return [index for index, action in enumerate(ACTIONS) if self.board[action] != 0]
+        return [action for action in ACTIONS if self.board[action] != 0]
 
     def apply(self, action):
         # if action is invalid, do nothing and let caller decide what to do
@@ -41,6 +36,9 @@ class Tictactoe(Game):
         return True
 
     def result(self):
+        if self.last_action == None:
+            return False, 0
+
         row, column = self.last_action
         previous_player = -self.current_player
 
@@ -86,14 +84,6 @@ class Tictactoe(Game):
     @current_player.setter
     def current_player(self, value):
         self._current_player = value
-
-    @property
-    def last_action(self):
-        return self._last_action
-
-    @last_action.setter
-    def last_action(self, value):
-        self._last_action = value
 
     @property
     def board(self):

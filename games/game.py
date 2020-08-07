@@ -19,13 +19,11 @@ class Game(ABC):
     def invalid_actions(self):
         pass
 
-    @abstractmethod
     def valid_indexes(self):
-        pass
+        return [index for index, action in enumerate(self.valid_actions())]
 
-    @abstractmethod
     def invalid_indexes(self):
-        pass
+        return [index for index, action in enumerate(self.invalid_actions())]
 
     @abstractmethod
     def apply(self, action):
@@ -55,10 +53,6 @@ class Game(ABC):
 
     @abstractproperty
     def current_player(self):
-        pass
-
-    @abstractproperty
-    def last_action(self):
         pass
 
     @abstractproperty
