@@ -58,6 +58,33 @@ class Tictactoe(Game):
 
         return np.all(self.board != 0), 0
 
+    def heuristic(self):
+        checks = [
+            self.board[0, range(3)], # columns
+            self.board[1, range(3)],
+            self.board[2, range(3)],
+            self.board[range(3), 0], # row
+            self.board[range(3), 1],
+            self.board[range(3), 2],
+            self.board[range(3), range(3)], # diagnal
+            self.board[[2,1,0], range(3)] # anti-diagnal
+        ]
+
+        opponent = -self.current_player
+
+        total = 0
+        for check in checks:
+            player_count = np.count_nonzero(check == self.current_player)
+            opponent_count = np.count_nonzero(check == opponent)
+
+            # 100 for 3-in-a-row, 10 for 2-in-a-row, 1 for 1-in-a-row
+            if opponent_count == 0 and player_count != 0:
+                total += self.current_player * 10**(player_count-1)
+            elif player_count == 0 and opponent_count != 0:
+                total += opponent * 10**(opponent_count-1)
+            
+        return total / (len(checks) * 100) # limit result between -1 and 1
+
     def get_symbol(self, value):
         if value == 1:
             return 'X'

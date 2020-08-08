@@ -42,6 +42,10 @@ class Game(ABC):
         return next_game
 
     @abstractmethod
+    def heuristic(self):
+        pass
+
+    @abstractmethod
     def __str__(self):
         pass
 

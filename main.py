@@ -9,7 +9,7 @@ if __name__ == '__main__':
 
     random_action = RandomAction()
     minmax = Minmax()
-    # minmax.load('tictactoe_minmax')
+    # minmax.load('connect4_minmax')
 
     # player learns to play game
     simulator = Simulator(game, player, [random_action, minmax])

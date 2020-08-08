@@ -98,6 +98,55 @@ class Connect4(Game):
 
         return np.all(self.board != 0), 0
 
+    def heuristic(self):
+        total = 0
+        num_checks = 0
+
+        # total possible horizontal arrays
+        for row in range(HEIGHT):
+            for start_col in range(WIDTH-4+1): # cols 0 through 3
+                num_checks += 1
+                array = self.board[row,start_col:start_col+4]
+                total += self.get_array_heuristic(array)
+
+        # total possible vertical arrays
+        for col in range(WIDTH):
+            for start_row in range(HEIGHT-4+1): # rows 0 through 2
+                num_checks += 1
+                array = self.board[start_row:start_row+4,col]
+                total += self.get_array_heuristic(array)
+
+        # total possible diagonal arrays
+        for i in range(-2, 3+1): # to get all diagonals with len >= 4
+            diag = self.board.diagonal(i)
+            for j in range(len(diag)-4+1):
+                num_checks += 1
+                array = diag[j:j+4]
+                total += self.get_array_heuristic(array)
+
+        # total possible anti diagonal arrays
+        flipped_board = np.fliplr(self.board)
+        for i in range(-2, 3+1): # to get all anti diagonals with len >= 4
+            anti_diag = flipped_board.diagonal(i)
+            for j in range(len(anti_diag)-4+1):
+                num_checks += 1
+                array = anti_diag[j:j+4]
+                total += self.get_array_heuristic(array)
+
+        return total / (num_checks * 1000) # limit result between -1 and 1
+
+    def get_array_heuristic(self, array):
+        player_count = np.count_nonzero(array == self.current_player)
+        opponent_count = np.count_nonzero(array == -self.current_player)
+
+        # 1000 for 4-in-a-row, 100 for 3-in-a-row, ...
+        if opponent_count == 0  and player_count != 0:
+            return self.current_player * 10**(player_count-1)
+        elif player_count == 0 and opponent_count != 0:
+            return -self.current_player * 10**(opponent_count-1)
+        else:
+            return 0
+
     def get_symbol(self, value):
         if value == 1:
             return 'X'
