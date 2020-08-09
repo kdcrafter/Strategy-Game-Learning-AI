@@ -6,54 +6,49 @@ class Minmax(LearningAgent):
     def __init__(self, max_depth=4):
         super().__init__()
         self.cache = defaultdict(lambda: (0, False)) # (game value, is game value final/certain)
-        self.max_depth = max_depth # >= 1
+        self.max_depth = max_depth # >= 0
 
     def act(self, game):
-        valid_actions, game_values = self.get_action_values(game)
-        best_index = self.get_best_index(game.current_player, game_values)
-        return valid_actions[best_index]
-
-    def learn(self):
-        self.learning = True
-
-    def stop_learning(self):
-        self.learning = False
-
-    def get_action_values(self, game, depth=0):
         valid_actions = game.valid_actions()
         games = [game.next_copy(action) for action in valid_actions]
-        game_values = [self.get_game_value(game, depth+1) for game in games]
 
-        return valid_actions, game_values
+        disjointed_game_values = [self.get_game_values(game) for game in games]
+        game_values, is_final_values = zip(*disjointed_game_values)
 
-    def get_game_value(self, game, depth=0):
+        best_index = self.get_best_index(game.current_player, game_values)
+        game_value = game_values[best_index]
+        is_final = is_final_values[best_index]
+        self.cache[game] = (game_value, is_final)
+
+        return valid_actions[best_index]
+
+    def get_game_values(self, game, depth=0):
         value, is_final = self.cache[game]
         if is_final:
-            return value
+            self.cache[game] = (value, True)
+            return self.cache[game]
 
-        value, is_final = self.calc_game_value(game, depth)
-
-        if self.learning:
-            self.cache[game] = (value, is_final)
-
-        return value
-
-    def calc_game_value(self, game, depth=0):
         finished, winner = game.result()
         if finished:
-            return winner, True
+            self.cache[game] = (winner, True)
+            return self.cache[game]
 
         if depth == self.max_depth:
-            return game.heuristic(), False
+            self.cache[game] = (game.heuristic(), False)
+            return self.cache[game]
 
-        valid_actions, game_values = self.get_action_values(game, depth)
-        return self.get_best_game_value(game.current_player, game_values), True
+        valid_actions = game.valid_actions()
+        games = [game.next_copy(action) for action in valid_actions]
 
-    def get_best_game_value(self, current_player, game_values):
-        if current_player == 1:
-            return max(game_values)
-        else:
-            return min(game_values)
+        disjointed_game_values = [self.get_game_values(game, depth+1) for game in games]
+        game_values, is_final_values = zip(*disjointed_game_values)
+
+        best_index = self.get_best_index(game.current_player, game_values)
+        game_value = game_values[best_index]
+        is_final = is_final_values[best_index]
+        self.cache[game] = (game_value, is_final)
+
+        return game_value, is_final
 
     def get_best_index(self, current_player, game_values):
         if current_player == 1:

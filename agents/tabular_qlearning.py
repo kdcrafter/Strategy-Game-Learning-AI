@@ -6,7 +6,7 @@ import math, random
 # TODO: implement a double qlearning version
 
 class TabularQlearning(LearningAgent):
-    def __init__(self, epsilon_init=0.5, epsilon_drop_rate=0.5, epsilon_drop_step=10, learning_rate_init=0.5, learning_rate_drop_rate=0.5, learning_rate_drop_step=10, discount_factor=1.0):
+    def __init__(self, epsilon_init=0.9, epsilon_drop_rate=0.2, epsilon_drop_step=10, learning_rate_init=0.9, learning_rate_drop_rate=0.2, learning_rate_drop_step=10, discount_factor=1.0):
         super().__init__()
 
         self.epsilon = epsilon_init

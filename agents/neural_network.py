@@ -9,7 +9,7 @@ import dill, os
 # batch size parameter ?
 
 """
-Sample Model:
+Sample Model (Tictactoe):
 
 model = tf.keras.Sequential([
     tf.keras.layers.Reshape((9,), input_shape=(3,3,)),

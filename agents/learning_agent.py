@@ -10,11 +10,9 @@ class LearningAgent(Agent):
 
         self.learn()
 
-    @abstractmethod
     def learn(self):
         pass
 
-    @abstractmethod
     def stop_learning(self):
         pass
 

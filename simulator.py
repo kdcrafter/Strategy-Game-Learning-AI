@@ -19,6 +19,9 @@ class Simulator():
         self.opponent = next(self.opponents)
 
         for i in range(num_games):
+            if i % 10 == 0:
+                print(f'Game: {i} / {num_games}', end='\r')
+
             self.game.setup()
     
             finished = False
@@ -52,6 +55,8 @@ class Simulator():
             # so player goes against opponent first then second then switches to the next opponent
             if self.player_color == 1:
                 self.opponent = next(self.opponents)
+
+        print()
 
     def update_results(self, winner):
         players = (self.player, self.opponent)
