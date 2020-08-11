@@ -25,11 +25,11 @@ if __name__ == '__main__':
     simulator = Simulator(game, player, [minmax, random_action])
     simulator.play(num_games=800)
 
+    print(simulator)
+
     # player is stored
     player.stop_learning()
     player.save('connect4_neural_network')
-
-    print(simulator)
 
     # player is tested
     simulator.reset_scores()

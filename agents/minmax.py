@@ -8,6 +8,12 @@ class Minmax(LearningAgent):
         self.cache = defaultdict(lambda: (0, False)) # (game value, is game value final/certain)
         self.max_depth = max_depth # >= 0
 
+    def learn(self):
+        self.learning = True
+
+    def stop_learning(self):
+        self.learning = False
+
     def act(self, game):
         valid_actions = game.valid_actions()
         games = [game.next_copy(action) for action in valid_actions]
@@ -18,11 +24,16 @@ class Minmax(LearningAgent):
         best_index = self.get_best_index(game.current_player, game_values)
         game_value = game_values[best_index]
         is_final = is_final_values[best_index]
-        self.cache[game] = (game_value, is_final)
+
+        if self.learning:
+            self.cache[game] = (game_value, is_final)
 
         return valid_actions[best_index]
 
     def get_game_values(self, game, depth=0):
+        if not self.learning:
+            return self.cache[game]
+
         value, is_final = self.cache[game]
         if is_final:
             self.cache[game] = (value, True)
