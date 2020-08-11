@@ -1,7 +1,8 @@
 # Other
 training_agents/
 .vscode/
-test.py
+test*.py
+*.lprof
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

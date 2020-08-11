@@ -14,6 +14,7 @@ class Minmax(LearningAgent):
     def stop_learning(self):
         self.learning = False
 
+    @profile
     def act(self, game):
         valid_actions = game.valid_actions()
         games = [game.next_copy(action) for action in valid_actions]
@@ -30,6 +31,7 @@ class Minmax(LearningAgent):
 
         return valid_actions[best_index]
 
+    @profile
     def get_game_values(self, game, depth=0):
         if not self.learning:
             return self.cache[game]
@@ -61,6 +63,7 @@ class Minmax(LearningAgent):
 
         return game_value, is_final
 
+    @profile
     def get_best_index(self, current_player, game_values):
         if current_player == 1:
             return game_values.index(max(game_values))

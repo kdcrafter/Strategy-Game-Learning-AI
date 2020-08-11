@@ -15,11 +15,13 @@ class Simulator():
     def reset_scores(self):
         self.player_scores = defaultdict(lambda: (Scores(), Scores()))
 
+    @profile
     def play(self, num_games=1):
         self.opponent = next(self.opponents)
+        print_rate = num_games//10 if num_games >= 10 else 1
 
         for i in range(num_games):
-            if i % 10 == 0:
+            if i % print_rate == 0:
                 print(f'Game: {i} / {num_games}', end='\r')
 
             self.game.setup()

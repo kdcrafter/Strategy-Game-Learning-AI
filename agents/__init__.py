@@ -10,4 +10,4 @@ from human import Human
 from minmax import Minmax
 from tabular_qlearning import TabularQlearning
 from monte_carlo_tree_search import MonteCarloTreeSearch
-from neural_network import NeuralNetwork
+# from neural_network import NeuralNetwork

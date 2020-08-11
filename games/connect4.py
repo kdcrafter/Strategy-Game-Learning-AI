@@ -21,6 +21,7 @@ class Connect4(Game):
     def invalid_actions(self):
         return [action for action in ACTIONS if self.board[0,action] != 0]
 
+    @profile
     def apply(self, action):
         # if action is invalid, do nothing and let caller decide what to do
         if self.board[0, action] != 0:
@@ -38,6 +39,7 @@ class Connect4(Game):
 
         return True
 
+    @profile
     def result(self):
         if self.last_slot == None:
             return False, 0
@@ -98,6 +100,7 @@ class Connect4(Game):
 
         return np.all(self.board != 0), 0
 
+    @profile
     def heuristic(self):
         total = 0
         num_checks = 0
@@ -135,6 +138,7 @@ class Connect4(Game):
 
         return total / (num_checks * 1000) # limit result between -1 and 1
 
+    @profile
     def get_array_heuristic(self, array):
         player_count = np.count_nonzero(array == self.current_player)
         opponent_count = np.count_nonzero(array == -self.current_player)

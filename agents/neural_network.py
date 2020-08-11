@@ -1,3 +1,4 @@
+'''
 from learning_agent import LearningAgent
 from config import TRAINING_AGENTS_DIRECTORY
 
@@ -156,3 +157,4 @@ class NeuralNetwork(LearningAgent):
 
     def __str__(self):
         return 'NeuralNetwork'
+'''
