@@ -7,7 +7,7 @@ from codetiming import Timer
 if __name__ == '__main__':
     # set up
     game = Connect4()
-    player = Minmax(0)
+    player = Minmax(2)
 
     random_action = RandomAction()
     # minmax = Minmax()
@@ -15,19 +15,19 @@ if __name__ == '__main__':
 
     # player learns to play game
     simulator = Simulator(game, player, [random_action])
-    simulator.play(num_games=80000)
+    simulator.play(num_games=800)
 
     print(simulator)
 
     # player is stored
-    player.stop_learning()
-    player.save('connect4_minmax_test')
+    # player.stop_learning()
+    # player.save('connect4_minmax_test')
 
     # player is tested
-    simulator.reset_scores()
-    simulator.play(num_games=20000)
+    # simulator.reset_scores()
+    # simulator.play(num_games=200)
 
-    print(simulator)
+    # print(simulator)
 
     # print(Timer.timers.mean('result'))
     # print(Timer.timers.mean('play'))
