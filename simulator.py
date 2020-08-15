@@ -1,6 +1,8 @@
 from collections import defaultdict
 from itertools import cycle
 
+from codetiming import Timer
+
 class Simulator():
     def __init__(self, game, player, opponents):
         self.game = game
@@ -16,9 +18,10 @@ class Simulator():
         self.player_scores = defaultdict(lambda: (Scores(), Scores()))
 
     @profile
+    # @Timer('play', logger=None)
     def play(self, num_games=1):
         self.opponent = next(self.opponents)
-        print_rate = num_games//10 if num_games >= 10 else 1
+        print_rate = num_games//100 if num_games >= 100 else 1
 
         for i in range(num_games):
             if i % print_rate == 0:

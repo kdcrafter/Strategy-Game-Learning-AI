@@ -1,11 +1,13 @@
 from games import Tictactoe, Connect4
-from agents import Human, RandomAction, Minmax, TabularQlearning, MonteCarloTreeSearch
+from agents import Human, RandomAction, FirstAction, Minmax, TabularQlearning, MonteCarloTreeSearch
 from simulator import Simulator
+
+from codetiming import Timer
 
 if __name__ == '__main__':
     # set up
     game = Connect4()
-    player = Minmax(1)
+    player = Minmax(0)
 
     random_action = RandomAction()
     # minmax = Minmax()
@@ -13,7 +15,7 @@ if __name__ == '__main__':
 
     # player learns to play game
     simulator = Simulator(game, player, [random_action])
-    simulator.play(num_games=8)
+    simulator.play(num_games=80000)
 
     print(simulator)
 
@@ -23,6 +25,9 @@ if __name__ == '__main__':
 
     # player is tested
     simulator.reset_scores()
-    simulator.play(num_games=2)
+    simulator.play(num_games=20000)
 
     print(simulator)
+
+    # print(Timer.timers.mean('result'))
+    # print(Timer.timers.mean('play'))

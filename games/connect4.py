@@ -1,155 +1,150 @@
+'''
+References:
+https://github.com/denkspuren/BitboardC4/blob/master/BitboardDesign.md
+https://www.gamedev.net/forums/topic/225611-connect-4-evaluation/
+'''
+
 from games import Game
 
+from codetiming import Timer
 import numpy as np
 
 HEIGHT = 6
 WIDTH = 7
-ACTIONS = list(range(WIDTH))
+COLUMNS = list(range(WIDTH))
+MAGIC_NUMBERS = [1, 7, 6, 8] # used to check for vertical, horizontal, anit-diagonal, and diagonal 4-in-a-rows respectively
 
 class Connect4(Game):
     def setup(self):
-        self.current_player = 1
-        self.last_slot = None
-        self.board = np.zeros((HEIGHT,WIDTH), dtype=np.int8)
+        # bitboard indicating player1 and player2's pieces respectively
+        self.player1_board = 0
+        self.player2_board = 0
+
+        # the number of pieces that have been placed
+        self.piece_count = 0
+
+        # bottom most empty slots (as an index) for each column
+        self.piece_heights = [0, 7, 14, 21, 28, 35, 42] # [0, 7, 15, 24, 30, 35, 42]
 
     def actions(self):
-        return ACTIONS
+        return COLUMNS
 
     def valid_actions(self):
-        return [action for action in ACTIONS if self.board[0,action] == 0]
+        return [column for column in COLUMNS if not self.is_full(column)]
 
     def invalid_actions(self):
-        return [action for action in ACTIONS if self.board[0,action] != 0]
+        return [column for column in COLUMNS if self.is_full(column)]
 
     @profile
-    def apply(self, action):
+    def apply(self, column):
         # if action is invalid, do nothing and let caller decide what to do
-        if self.board[0, action] != 0:
+        if self.is_full(column):
             return False
 
-        # get index of the last empty slot in the to be placed column
-        column = self.board[:,action]
-        index = np.where(column == 0)[0][-1]
-        self.board[index,action] = self.current_player
-        
-        # switch current_player at start of apply() ?
-        self.current_player = -self.current_player
+        # place piece in empty board in correct slot
+        mask = 1 << self.piece_heights[column]
 
-        self.last_slot = (index, action) # (row, column)
+        # apply mask to current board
+        if self.current_player == 1:
+            self.player1_board ^= mask
+        else:
+            self.player2_board ^= mask
+
+        self.piece_heights[column] += 1
+        self.piece_count += 1
 
         return True
 
     @profile
+    # @Timer('result', logger=None)
     def result(self):
-        if self.last_slot == None:
-            return False, 0
-
-        row, col = self.last_slot
         previous_player = -self.current_player
+        if previous_player == 1:
+            board = self.player1_board
+        else:
+            board = self.player2_board
 
-        # get slots above and below the last slot
-        updown = self.board[:,col]
-        up = np.flip(updown[:row])
-        down = updown[row+1:]
+        if self.is_4_in_row(board):
+            return True, previous_player
 
-        # get slots to the left and right of the last slot
-        leftright = self.board[row,:]
-        left = np.flip(leftright[:col])
-        right = leftright[col+1:]
-
-        # get slots to the top right and bottom left of the last slot
-        offset = col - row
-        pos_offset = max(offset, 0)
-        diag = self.board.diagonal(offset)
-        upper_diag = np.flip(diag[:col-pos_offset])
-        lower_diag = diag[col-pos_offset+1:]
-
-        # get slots to the top left and bottom right of the last slot
-        flipped_col = WIDTH-1-col
-        flipped_board = np.fliplr(self.board)
-        offset = flipped_col - row
-        pos_offset = max(offset, 0)
-        anti_diag = flipped_board.diagonal(offset)
-        upper_anti_diag = np.flip(anti_diag[:flipped_col-pos_offset])
-        lower_anti_diag = anti_diag[flipped_col-pos_offset+1:]
-
-        checks = [
-            (up, down),
-            (left, right),
-            (upper_diag, lower_diag),
-            (upper_anti_diag, lower_anti_diag)
-        ]
-
-        for upper_check, lower_check in checks:
-            upper_count = 0
-            for slot in upper_check:
-                if slot == previous_player:
-                    upper_count += 1
-                else:
-                    break
-
-            lower_count = 0
-            for slot in lower_check:
-                if slot == previous_player:
-                    lower_count += 1
-                else:
-                    break
-
-            if upper_count + lower_count >= 4:
-                return True, previous_player
-
-        return np.all(self.board != 0), 0
+        return self.piece_count == 42, 0
 
     @profile
     def heuristic(self):
-        total = 0
-        num_checks = 0
+        num_odd = 0 # of odd threats by player 2 minus # of odd threats by player 1
+        num_mixed = 0 # of mixed odd threats
+        num_even = 0 # of even threats by player 2
 
-        # total possible horizontal arrays
-        for row in range(HEIGHT):
-            for start_col in range(WIDTH-4+1): # cols 0 through 3
-                num_checks += 1
-                array = self.board[row,start_col:start_col+4]
-                total += self.get_array_heuristic(array)
+        for column in COLUMNS:
+            start_index = self.piece_heights[column]+1
+            row = start_index % 7
 
-        # total possible vertical arrays
-        for col in range(WIDTH):
-            for start_row in range(HEIGHT-4+1): # rows 0 through 2
-                num_checks += 1
-                array = self.board[start_row:start_row+4,col]
-                total += self.get_array_heuristic(array)
+            if row == 0: # row is full
+                continue
 
-        # total possible diagonal arrays
-        for i in range(-2, 3+1): # to get all diagonals with len >= 4
-            diag = self.board.diagonal(i)
-            for j in range(len(diag)-4+1):
-                num_checks += 1
-                array = diag[j:j+4]
-                total += self.get_array_heuristic(array)
+            # for each possible threat, check if threat
+            for slot_index in range(start_index, start_index + (6-row)):
+                mask = 1 << slot_index
 
-        # total possible anti diagonal arrays
-        flipped_board = np.fliplr(self.board)
-        for i in range(-2, 3+1): # to get all anti diagonals with len >= 4
-            anti_diag = flipped_board.diagonal(i)
-            for j in range(len(anti_diag)-4+1):
-                num_checks += 1
-                array = anti_diag[j:j+4]
-                total += self.get_array_heuristic(array)
+                if row % 2 == 0: # odd row (account for zero indexing)
+                    # place piece in slot
+                    player1_board_copy = mask ^ self.player1_board
+                    player2_board_copy = mask ^ self.player2_board
 
-        return total / (num_checks * 1000) # limit result between -1 and 1
+                    # see if placed piece causes 4-in-row
+                    player1_4_in_row = self.is_4_in_row(player1_board_copy)
+                    player2_4_in_row = self.is_4_in_row(player2_board_copy)
 
-    @profile
-    def get_array_heuristic(self, array):
-        player_count = np.count_nonzero(array == self.current_player)
-        opponent_count = np.count_nonzero(array == -self.current_player)
+                    if player1_4_in_row and player2_4_in_row:
+                        num_mixed += 1
+                    elif player1_4_in_row:
+                        num_odd -= 1
+                    elif player2_4_in_row:
+                        num_odd += 1
+                else:
+                    player2_board_copy = mask ^ self.player2_board
+                    if self.is_4_in_row(player2_board_copy):
+                        num_even += 1
 
-        # 1000 for 4-in-a-row, 100 for 3-in-a-row, ...
-        if opponent_count == 0  and player_count != 0:
-            return self.current_player * 10**(player_count-1)
-        elif player_count == 0 and opponent_count != 0:
-            return -self.current_player * 10**(opponent_count-1)
+        # return predicted result of game based of number of even, odd, and mixed threats
+        if num_odd < 0:
+            return 1
+        elif num_odd == 0:
+            if num_mixed % 2 != 0:
+                return 1
+            else:    
+                if num_mixed==0:    
+                    if num_even == 0:
+                        return 0
+                    else:
+                        return -1      
+                else:
+                    return -1
+        elif num_odd == 1:
+            if num_mixed % 2 != 0:
+                return -1
+            else:
+                return 1             
         else:
-            return 0
+            return -1
+
+    def __str__(self):
+        board_array = self.board
+        line = '|-------------|\n'
+        string = line
+
+        for row in range(HEIGHT):
+            symbols = map(self.get_symbol, board_array[row])
+            string += '|' + '|'.join(symbols) + '|\n'
+            string += line
+
+        return string
+
+    def __hash__(self):
+        return hash((self.player1_board << 49) + self.player2_board)
+
+    def __eq__(self, other):
+        return self.player1_board == other.player1_board and self.player2_board == other.player2_board
 
     def get_symbol(self, value):
         if value == 1:
@@ -159,29 +154,42 @@ class Connect4(Game):
         else:
             return ' '
 
-    def __str__(self):
-        line = '|-------------|\n'
-        string = line
+    def is_4_in_row(self, board):
+        for num in MAGIC_NUMBERS:
+            # align all 4-in-a-rows together based on magic number then 'and' their values together
+            temp = board & (board >> num)
+            if temp & (temp >> 2 * num) != 0:
+                return True
 
-        for row in range(HEIGHT):
-            symbols = map(self.get_symbol, self.board[row])
-            string += '|' + '|'.join(symbols) + '|\n'
-            string += line
+        return False
 
-        return string
+    def is_full(self, column):
+        # works as extra row starts at 6 and has a differance of 7
+        return self.piece_heights[column] % 7 == 6 # self.piece_heights[column]-6) % 7 != 0
 
     @property
     def current_player(self):
-        return self._current_player
-
-    @current_player.setter
-    def current_player(self, value):
-        self._current_player = value
+        return 1 if self.piece_count % 2 == 0 else -1
 
     @property
     def board(self):
-        return self._board
+        player1_board_copy = self.player1_board
+        player2_board_copy = self.player2_board
+        board_array = np.zeros((HEIGHT, WIDTH), dtype=np.int8)
 
-    @board.setter
-    def board(self, value):
-        self._board = value
+        for index in range(49):
+            # get numpy array column (columns to the right have higher numbers) and row (lower rows have higher numbers)
+            # from bitboard index (starts at bottom left and increases upward)
+            col = index // 7 # as the bottom of each column is a multiple of 7
+            row = 5 - (index % 7)
+
+            if row != -1: # if index is not apart of extra row
+                if player1_board_copy & 1 == 1:
+                    board_array[row][col] = 1
+                elif player2_board_copy & 1 == 1:
+                    board_array[row][col] = -1
+
+            player1_board_copy = player1_board_copy >> 1
+            player2_board_copy = player2_board_copy >> 1
+
+        return board_array

@@ -33,6 +33,10 @@ class Game(ABC):
     def result(self):
         pass
 
+    @abstractmethod
+    def heuristic(self):
+        pass
+
     def copy(self):
         return deepcopy(self)
 
@@ -40,10 +44,6 @@ class Game(ABC):
         next_game = self.copy()
         next_game.apply(action)
         return next_game
-
-    @abstractmethod
-    def heuristic(self):
-        pass
 
     @abstractmethod
     def __str__(self):

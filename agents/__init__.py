@@ -6,6 +6,7 @@ sys.path.append(os.path.abspath('agents/'))
 from agent import Agent
 from learning_agent import LearningAgent
 from random_action import RandomAction
+from first_action import FirstAction
 from human import Human
 from minmax import Minmax
 from tabular_qlearning import TabularQlearning
