@@ -1,7 +1,7 @@
 '''
-References:
+Helpful Info:
 https://github.com/denkspuren/BitboardC4/blob/master/BitboardDesign.md
-https://www.gamedev.net/forums/topic/225611-connect-4-evaluation/
+http://www.informatik.uni-trier.de/~fernau/DSL0607/Masterthesis-Viergewinnt.pdf
 '''
 
 from games import Game

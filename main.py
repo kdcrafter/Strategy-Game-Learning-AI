@@ -6,8 +6,8 @@ from codetiming import Timer
 
 if __name__ == '__main__':
     # set up
-    game = Connect4()
-    player = Minmax(2)
+    game = Tictactoe()
+    player = Minmax(0)
 
     random_action = RandomAction()
     # minmax = Minmax()
@@ -20,14 +20,11 @@ if __name__ == '__main__':
     print(simulator)
 
     # player is stored
-    # player.stop_learning()
-    # player.save('connect4_minmax_test')
+    player.stop_learning()
+    player.save('tictactoe_minmax8')
 
     # player is tested
-    # simulator.reset_scores()
-    # simulator.play(num_games=200)
+    simulator.reset_scores()
+    simulator.play(num_games=200)
 
-    # print(simulator)
-
-    # print(Timer.timers.mean('result'))
-    # print(Timer.timers.mean('play'))
+    print(simulator)
