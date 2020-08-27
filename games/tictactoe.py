@@ -38,10 +38,10 @@ class Tictactoe(Game):
         return POSITIONS
 
     def valid_actions(self):
-        return [position for position in POSITIONS if not self.is_empty(position)]
+        return [position for position in POSITIONS if self.is_empty(position)]
 
     def invalid_actions(self):
-        return [position for position in POSITIONS if self.is_empty(position)]
+        return [position for position in POSITIONS if not self.is_empty(position)]
 
     def apply(self, position):
         # if action is invalid, do nothing and let caller decide what to do

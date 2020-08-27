@@ -7,14 +7,14 @@ from codetiming import Timer
 if __name__ == '__main__':
     # set up
     game = Tictactoe()
-    player = Minmax(0)
+    player = Minmax(8)
 
     random_action = RandomAction()
-    # minmax = Minmax()
+    minmax = Minmax(8)
     # minmax.load('connect4_minmax1')
 
     # player learns to play game
-    simulator = Simulator(game, player, [random_action])
+    simulator = Simulator(game, player, [random_action, minmax])
     simulator.play(num_games=800)
 
     print(simulator)

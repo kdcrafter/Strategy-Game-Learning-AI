@@ -17,8 +17,6 @@ class Simulator():
     def reset_scores(self):
         self.player_scores = defaultdict(lambda: (Scores(), Scores()))
 
-    @profile
-    # @Timer('play', logger=None)
     def play(self, num_games=1):
         self.opponent = next(self.opponents)
         print_rate = num_games//100 if num_games >= 100 else 1
@@ -61,7 +59,7 @@ class Simulator():
             if self.player_color == 1:
                 self.opponent = next(self.opponents)
 
-        print()
+        print() # newline
 
     def update_results(self, winner):
         players = (self.player, self.opponent)

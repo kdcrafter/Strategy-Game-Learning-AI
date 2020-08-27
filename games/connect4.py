@@ -35,7 +35,6 @@ class Connect4(Game):
     def invalid_actions(self):
         return [column for column in COLUMNS if self.is_full(column)]
 
-    @profile
     def apply(self, column):
         # if action is invalid, do nothing and let caller decide what to do
         if self.is_full(column):
@@ -55,8 +54,6 @@ class Connect4(Game):
 
         return True
 
-    @profile
-    # @Timer('result', logger=None)
     def result(self):
         previous_player = -self.current_player
         if previous_player == 1:
@@ -69,7 +66,6 @@ class Connect4(Game):
 
         return self.piece_count == 42, 0
 
-    @profile
     def heuristic(self):
         num_odd = 0 # of odd threats by player 2 minus # of odd threats by player 1
         num_mixed = 0 # of mixed odd threats
