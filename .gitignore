@@ -1,7 +1,7 @@
 # Other
 training_agents/
 .vscode/
-test*.py
+test*
 *.lprof
 
 # Byte-compiled / optimized / DLL files

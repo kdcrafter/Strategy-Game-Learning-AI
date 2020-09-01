@@ -2,7 +2,7 @@ from agent import Agent
 from config import TRAINING_AGENTS_DIRECTORY
 
 from abc import ABC, abstractmethod, abstractproperty
-import os, dill
+import os, joblib
 
 class LearningAgent(Agent):
     def __init__(self):
@@ -22,21 +22,19 @@ class LearningAgent(Agent):
         if not os.path.isdir(TRAINING_AGENTS_DIRECTORY):
             os.mkdir(TRAINING_AGENTS_DIRECTORY)
 
-        filename = name + '.pickle'
+        filename = name + '.joblib'
         pathname = os.path.join(TRAINING_AGENTS_DIRECTORY, filename)
 
-        with open(pathname, 'wb') as file:
-            data = (self.__class__, self.__dict__)
-            dill.dump(data, file)
+        data = (self.__class__, self.__dict__)
+        joblib.dump(data, pathname)
 
     def load(self, name):
         assert(os.path.isdir(TRAINING_AGENTS_DIRECTORY))
 
-        filename = name + '.pickle'
+        filename = name + '.joblib'
         pathname = os.path.join(TRAINING_AGENTS_DIRECTORY, filename)
 
-        with open(pathname, 'rb') as file:
-            cls, attributes = dill.load(file)
-            assert(self.__class__ == cls)
-            self.__dict__.update(attributes)
+        cls, attributes = joblib.load(pathname)
+        assert(self.__class__ == cls)
+        self.__dict__.update(attributes)
             

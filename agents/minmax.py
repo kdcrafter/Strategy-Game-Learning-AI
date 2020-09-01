@@ -1,11 +1,9 @@
 from learning_agent import LearningAgent
 
-from collections import defaultdict
-
 class Minmax(LearningAgent):
     def __init__(self, max_depth=4):
         super().__init__()
-        self.cache = defaultdict(lambda: (0, False)) # (game value, is game value final/certain)
+        self.cache = {}
         self.max_depth = max_depth # >= 0
 
     def learn(self):
@@ -13,6 +11,12 @@ class Minmax(LearningAgent):
 
     def stop_learning(self):
         self.learning = False
+
+    def get_game_value(self, game):
+        if game in self.cache:
+            return self.cache[game]
+        else:
+            return (0, False) # (game value, is game value final/certain)
 
     def act(self, game):
         valid_actions = game.valid_actions()
@@ -32,21 +36,21 @@ class Minmax(LearningAgent):
 
     def get_game_values(self, game, depth=0):
         if not self.learning:
-            return self.cache[game]
+            return self.get_game_value(game)
 
-        value, is_final = self.cache[game]
+        value, is_final = self.get_game_value(game)
         if is_final:
             self.cache[game] = (value, True)
-            return self.cache[game]
+            return self.get_game_value(game)
 
         finished, winner = game.result()
         if finished:
             self.cache[game] = (winner, True)
-            return self.cache[game]
+            return self.get_game_value(game)
 
         if depth == self.max_depth:
             self.cache[game] = (game.heuristic(), False)
-            return self.cache[game]
+            return self.get_game_value(game)
 
         valid_actions = game.valid_actions()
         games = [game.next_copy(action) for action in valid_actions]
